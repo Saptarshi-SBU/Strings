@@ -27,6 +27,8 @@ class TrieNode {
 
     bool _leaf; // terminal character
 
+    bool _extended; //Prefix of Prefix
+
     TrieNode(int no, char elem, bool is_terminal) : 
                        _element(elem), _leaf(is_terminal), _no(no) { }
     ~TrieNode() {}
@@ -78,6 +80,28 @@ class Trie {
              return false;
     }
 
+    // Extended Prefix Matching
+    bool _prefix_match_pos_ext(int i, string& text, TrieNode* node) {
+
+         assert(i >= 0);
+         assert(node);
+
+         if (node->_leaf || node->_extended) {
+//           cout << "DBG : Found!" << endl;
+             return true;
+         }    
+
+         if (i >= text.length())
+             return false;
+
+         auto key = text.at(i);
+         if (node->_table.find(key) != node->_table.end()) {
+//             cout << "DBG key " << key << endl;
+             return  _prefix_match_pos_ext(i + 1, text, node->_table[key]);
+         } else 
+             return false;
+    }
+
     public:
         Trie() { _rootp = new TrieNode(0, '$', false); _lastno = 0;}
        ~Trie() { _clear(_rootp); }
@@ -95,8 +119,19 @@ class Trie {
                      table[element] = node; 
                      //if (node->_leaf)
                      //    cout << "DBG Leaf " << node->_element << endl;
-                 } else
+                 } else {
                      node = table[element];
+                     if (node->_extended) {
+                         break;
+                     } else if (node->_leaf) {
+                         node->_extended = (i < (n - 1)) ? true : false;
+                         node->_leaf = node->_extended ? false : true;
+                     } else if (i == (n - 1)) 
+                            node->_extended =  true;
+                            
+                     //if (node->_extended)
+                     //    cout << "DBG Ext " << node->_element << endl;
+                 }   
                  i++;
              }     
         }    
@@ -114,32 +149,21 @@ class Trie {
                     cout << "Match " << n << endl;
             }    
         }    
+
+        void prefix_match_ext(string& text) {
+            int n = text.length();
+            cout << "-----Extended Pattern Match offsets(" << text << ") ------" << endl;
+            while (n--) {
+                if (_prefix_match_pos_ext(n, text, _rootp))
+                    cout << "Match " << n << endl;
+            }    
+        }    
 };           
 
 int assignment01(void) {
-    // Sample 1
-    Trie *t;
-    vector<string> pat1 = { "ATA" };
-    t = new Trie();
-    for (auto& i : pat1) {
-        cout << i << endl;
-        t->add_pattern(i);
-    }    
-    t->printTrie();
-    delete t;
-    // Sample 2
-    vector<string> pat2 = { "AT", "AG", "AC"};
-    t = new Trie();
-    for (auto& i : pat2) {
-        cout << i << endl;
-        t->add_pattern(i);
-    }    
-    t->printTrie();
-    delete t;
-    // Sample 3
-    vector<string> pat3 = { "ATAGA", "ATC", "GAT"};
-    t = new Trie();
-    for (auto& i : pat3) {
+    vector<string> pat = { "ATAGA", "ATC", "GAT"};
+    Trie *t = new Trie();
+    for (auto& i : pat) {
         cout << i << endl;
         t->add_pattern(i);
     }    
@@ -161,8 +185,23 @@ int assignment02(void) {
     return 0;
 }    
 
+int assignment03(void) {
+    string text = "ACATA";
+    vector<string> pat = { "AT","A", "AG"};
+    Trie *t = new Trie();
+    for (auto& i : pat) {
+        cout << i << endl;
+        t->add_pattern(i);
+    }    
+    //t->prefix_match(text);
+    t->prefix_match_ext(text);
+    delete t;
+    return 0;
+}    
+
 int main(void) {
     assignment01();
     assignment02();
+    assignment03();
     return 0;
 }    

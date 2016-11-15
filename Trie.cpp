@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <cassert>
 
 using namespace std;
 
@@ -56,6 +57,27 @@ class Trie {
          }    
     }
 
+    // Prefix Match
+    // Patterns are not Prefix of Another Pattern
+    bool _prefix_match_pos(int i, string& text, TrieNode* node) {
+
+         assert(i >= 0);
+         assert(node);
+
+         if (node->_leaf) 
+             return true;
+
+         if (i >= text.length())
+             return false;
+
+         auto key = text.at(i);
+         if (node->_table.find(key) != node->_table.end()) {
+             //cout << "DBG key " << key << endl;
+             return  _prefix_match_pos(i + 1, text, node->_table[key]);
+         } else 
+             return false;
+    }
+
     public:
         Trie() { _rootp = new TrieNode(0, '$', false); _lastno = 0;}
        ~Trie() { _clear(_rootp); }
@@ -69,8 +91,10 @@ class Trie {
                  auto element = s.at(i); 
                  auto& table = node->_table;
                  if (table.find(element) == table.end()) {
-                     node = new TrieNode(++_lastno, element, i < (n - 1));
+                     node = new TrieNode(++_lastno, element, i == (n - 1));
                      table[element] = node; 
+                     //if (node->_leaf)
+                     //    cout << "DBG Leaf " << node->_element << endl;
                  } else
                      node = table[element];
                  i++;
@@ -81,32 +105,41 @@ class Trie {
             cout << "----Printing Trie Patterns----" << endl;
             _dfs(_rootp, 0);
         }    
+
+        void prefix_match(string& text) {
+            int n = text.length();
+            cout << "-----Pattern Match offsets(" << text << ") ------" << endl;
+            while (n--) {
+                if (_prefix_match_pos(n, text, _rootp))
+                    cout << "Match " << n << endl;
+            }    
+        }    
 };           
 
-int main(void) {
+int assignment01(void) {
     // Sample 1
     Trie *t;
-    vector<string> strlist1 = { "ATA" };
+    vector<string> pat1 = { "ATA" };
     t = new Trie();
-    for (auto& i : strlist1) {
+    for (auto& i : pat1) {
         cout << i << endl;
         t->add_pattern(i);
     }    
     t->printTrie();
     delete t;
     // Sample 2
-    vector<string> strlist2 = { "AT", "AG", "AC"};
+    vector<string> pat2 = { "AT", "AG", "AC"};
     t = new Trie();
-    for (auto& i : strlist2) {
+    for (auto& i : pat2) {
         cout << i << endl;
         t->add_pattern(i);
     }    
     t->printTrie();
     delete t;
     // Sample 3
-    vector<string> strlist3 = { "ATAGA", "ATC", "GAT"};
+    vector<string> pat3 = { "ATAGA", "ATC", "GAT"};
     t = new Trie();
-    for (auto& i : strlist3) {
+    for (auto& i : pat3) {
         cout << i << endl;
         t->add_pattern(i);
     }    
@@ -114,3 +147,22 @@ int main(void) {
     delete t;
     return 0;
 }
+
+int assignment02(void) {
+    string text = "AATCGGGTTCAATCGGGGT";
+    vector<string> pat = { "ATCG", "GGGT"};
+    Trie *t = new Trie();
+    for (auto& i : pat) {
+        cout << i << endl;
+        t->add_pattern(i);
+    }    
+    t->prefix_match(text);
+    delete t;
+    return 0;
+}    
+
+int main(void) {
+    assignment01();
+    assignment02();
+    return 0;
+}    

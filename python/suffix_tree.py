@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # suffix tree construction from suffix array
 
-from suffix_array import BuildSuffixArrayWithPrefixDouble, LCP
-
 class SuffixNode(object):
     """
         A node in the suffix tree.
@@ -40,11 +38,6 @@ class SuffixTree(object):
         """
         self.root = None
     
-    def __repr__(self):
-        """ 
-        Lists children in the suffix tree
-        """
-            
     def buildFromSuffixArray(self, string, suffix_array, lcp):
         """
             The core construction method.
@@ -86,6 +79,7 @@ class SuffixTree(object):
             
                     print ('==>using curr node keys : {} depth {} lcp {}'.format\
                         (curr_node.children.keys(), curr_node.depth, lcp_prev))
+
                     if lcp_prev == curr_node.depth:
                         curr_node.children[string[suffix_pos + lcp_prev]] = \
                             CreateLeafSuffixNode(curr_node, suffix_pos)
@@ -156,19 +150,6 @@ class SuffixTree(object):
         assert curr_depth < 0, "depth :%r" % curr_depth
         return sorted_suffixes
                 
-#string = "ACTAGAGACTTTAGACT"
 #suffix_array2 = [14, 0, 7, 12, 5, 3, 15, 1, 8, 13, 6, 4, 16, 11, 2, 10, 9]
 #lcp = {1: 0, 2: 3, 3: 3, 4: 1, 5: 5, 6: 3, 7: 0, 8: 2, 9: 2, 10: 0, 11: 4, 12: 2, 13: 0, 14: 1, 15: 4, 16: 1, 17: 2}
-if __name__ == "__main__":
-    #string = "ACTAGAGACTTTAGACT"
-    #string = "ACAGACTTTAGACT"
-    string = "ACAACTTACT"
-    suffix_array = BuildSuffixArrayWithPrefixDouble(string)
-    lcp = LCP(string, suffix_array)
-    print suffix_array
-    print lcp
-    string = string + '$'
-    suffix_array.pop(0)
-    suffix_tree = SuffixTree()
-    suffix_tree.buildFromSuffixArray(string, suffix_array, lcp)
-    suffix_tree.printSuffixTree(string)
+#string = "ACTAGAGACTTTAGACT"

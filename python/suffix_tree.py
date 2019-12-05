@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # suffix tree construction from suffix array
 
+from lcp import LCP
+from suffix_array import BuildSuffixArrayWithPrefixDouble
+
 class SuffixNode(object):
     """
         A node in the suffix tree.
@@ -84,22 +87,34 @@ class SuffixTree(object):
                         curr_node.children[string[suffix_pos + lcp_prev]] = \
                             CreateLeafSuffixNode(curr_node, suffix_pos)
                     else:
-                        new_intnode = CreateInternalSuffixNode(curr_node, lcp_prev)
-
                         # update old node
                         suffix_keys = sorted(curr_node.children.keys())
                         # suffix keys are sorted
                         suffix_key = suffix_keys[-1]
-                        #print ('suffix key :{}'.format(suffix_key))
+                        print ('suffix key :{}'.format(suffix_key))
                         old_node = curr_node.children[suffix_key]
-                        old_node.parent = new_intnode
 
-                        # update linkages
-                        curr_node.children[suffix_key] = new_intnode
+                        curr_depth = curr_node.depth
+                        # more to match
+                        if lcp_prev > curr_depth:
+                            new_intnode = None
+                            while curr_depth < lcp_prev:
+                                curr_depth = curr_depth + 1
+                                new_intnode = CreateInternalSuffixNode(curr_node, curr_depth)
+                                curr_node.children[string[suffix_pos + curr_depth - 1]] = new_intnode
+                                curr_node = new_intnode
+                                print ('suffix path new curr node keys : {} depth {}'.format\
+                                    (curr_node.children.keys(), curr_node.depth))
+                            assert new_intnode    
+                        else:
+                            new_intnode = CreateInternalSuffixNode(curr_node, curr_depth)
+                            curr_node.children[suffix_key] = new_intnode
+                            curr_node = new_intnode
+
+                        old_node.parent = new_intnode
                         new_intnode.children[string[old_node.suffix_pos + lcp_prev]] = old_node
                         new_intnode.children[string[suffix_pos + lcp_prev]] = \
-                            CreateLeafSuffixNode(new_intnode, suffix_pos)
-                        curr_node = new_intnode
+                                CreateLeafSuffixNode(new_intnode, suffix_pos)
 
             print ('<==updated curr node :{}'.format(curr_node.children.keys()))
 
@@ -113,6 +128,7 @@ class SuffixTree(object):
         """
             Suffix tree inorder traversal
         """
+        count = 0
         sorted_suffixes = []
 
         if self.root is None:
@@ -122,7 +138,7 @@ class SuffixTree(object):
         # depth indices
         indexPositions = [0 for x in range(len(string)) ]
     
-        print ('Printing suffix tree')
+        print ('Printing suffix tree {}'.format(string))
 
         #depth index iterator
         curr_depth = 0
@@ -142,7 +158,8 @@ class SuffixTree(object):
                 if node.isleaf():
                     suffix = string[node.suffix_pos : len(string)]
                     sorted_suffixes.append(suffix)
-                    print (suffix)
+                    count = count + 1
+                    print ('[{}] {}'.format(count, suffix))
                 nodeStack.pop()
                 indexPositions[curr_depth] = 0
                 curr_depth = curr_depth - 1
@@ -150,6 +167,14 @@ class SuffixTree(object):
         assert curr_depth < 0, "depth :%r" % curr_depth
         return sorted_suffixes
                 
-#suffix_array2 = [14, 0, 7, 12, 5, 3, 15, 1, 8, 13, 6, 4, 16, 11, 2, 10, 9]
-#lcp = {1: 0, 2: 3, 3: 3, 4: 1, 5: 5, 6: 3, 7: 0, 8: 2, 9: 2, 10: 0, 11: 4, 12: 2, 13: 0, 14: 1, 15: 4, 16: 1, 17: 2}
-#string = "ACTAGAGACTTTAGACT"
+if __name__ == "__main__":
+        text = "ACAGACTTTAGACT"
+        suffix_array = BuildSuffixArrayWithPrefixDouble(text)
+        #print suffix_array
+        lcp = LCP(text, suffix_array)
+        #print lcp
+        text = text + '$'
+        suffix_array.pop(0)
+        suffix_tree = SuffixTree()
+        suffix_tree.buildFromSuffixArray(text, suffix_array, lcp)
+        suffix_tree.printSuffixTree(text)

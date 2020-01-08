@@ -5,7 +5,7 @@
 #
 from utils_collections import permutation, overlapped_string
 
-def scs(wlist):
+def ssp(wlist):
     ''' shortest super string '''
     p = []
     ov = []
@@ -22,9 +22,9 @@ def scs(wlist):
     return min(ov)   
 
 wlist = [ 'red1', 'red', 'bad']
-print scs(wlist)
+print ssp(wlist)
 
-def scs_greedy(wlist):
+def ssp_greedy(wlist):
     ''' greedy super string based on overlap graph'''
     nr = len(wlist)
     overlap_graph = {}
@@ -63,4 +63,106 @@ def scs_greedy(wlist):
     return ''.join(wlist)
 
 wlist = [ 'red1', 'red', 'bad']
-print scs_greedy(wlist)
+print ssp_greedy(wlist)
+
+class de_bruijn_graph(object):
+
+    def __init__(self, nodes, edges):
+        ''' constructor '''
+        self.dbgraph = {}
+        self.nodes = nodes
+        for e in edges:
+            if e in self.dbgraph:
+                self.dbgraph[e] += 1
+            else:    
+                self.dbgraph[e]  = 1
+        self.odd = None        
+
+    def is_eulirean(self):
+        ''' does graph have a eulirean circuit/path '''
+        if self.odd is None:
+            odd = 0
+            for k in self.dbgraph:
+                if self.dbgraph[k] % 2 != 0:
+                    odd += 1
+                print k, self.dbgraph[k]
+            self.odd = odd        
+            print self.odd
+
+        # not eulirean
+        if self.odd > 2:        
+            return 0
+
+        # eulirean circuit    
+        if self.odd == 0:
+            return 1
+
+        # eulirean path  
+        return 2
+
+    def start_node(self):
+        ''' pick a node from the graph '''
+        for kt in self.dbgraph.keys():
+            if self.odd:
+                if self.dbgraph[kt] % 2:
+                    return kt[0]
+                else:
+                    continue
+            else:
+                return kt[0]
+        assert self.odd
+
+    def eulirean_walk(self):
+        ''' prints the path '''
+        stack = []
+        s = self.start_node()
+        print 'start_node {}'.format(s)
+        while True:
+            added = False
+            for st in self.dbgraph.keys():
+                if s in st:
+                    if self.dbgraph[st] > 0:
+                        print st, self.dbgraph[st]
+                        self.dbgraph[st] -= 1
+                        stack.append(s)
+                        s = st[1]
+                        added = True
+                        break
+            if added:
+                curr = s
+            else:    
+                break
+
+        if curr:
+            stack.append(curr)
+        return stack
+
+def de_bruijn_ize(st, k):
+    ''' generate multinode graph of kmers '''
+    edges = []
+    nodes = set()
+
+    for i in range(len(st) - k + 1):
+        edges.append((st[i : i + k - 1], st[i + 1 : i + k]))
+        nodes.add(st[i : i + k - 1])
+        nodes.add(st[i + 1 : i + k])
+    return nodes, edges    
+
+def ssp_de_bruijn(nodes, edges):
+    ''' driver function for building de bruijn graph for ssp problem formulation '''
+    dbgraph = de_bruijn_graph(nodes, edges)
+    if dbgraph.is_eulirean():
+        sss = ''
+        e_path = dbgraph.eulirean_walk()
+        for s in e_path:
+            sss = overlapped_string(sss, s)
+        print 'ssp de_bruijn {}'.format(sss)
+        return sss    
+    else:
+        print 'Graph is not eulirean'
+        return None
+
+#s = 'ACTGAGCTA'
+s = 'AABB'
+nodes, edges = de_bruijn_ize(s, 3)
+print ssp_de_bruijn(nodes, edges)

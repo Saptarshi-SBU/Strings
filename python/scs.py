@@ -102,25 +102,29 @@ class de_bruijn_graph(object):
 
     def start_node(self):
         ''' pick a node from the graph '''
+        max_e = 0
         for kt in self.dbgraph.keys():
             if self.odd:
-                if self.dbgraph[kt] % 2:
-                    return kt[0]
+                if self.dbgraph[kt] % 2 and self.dbgraph[kt] > max_e:
+                    max_e = self.dbgraph[kt]
+                    max_n = kt[0]
                 else:
                     continue
             else:
                 return kt[0]
-        assert self.odd
+        return max_n
 
-    def eulirean_walk(self):
+    def eulirean_walk(self, s= None):
         ''' prints the path '''
         stack = []
-        s = self.start_node()
+        curr = None
+        if s is None:
+            s = self.start_node()
         print 'start_node {}'.format(s)
         while True:
             added = False
             for st in self.dbgraph.keys():
-                if s in st:
+                if s == st[0]:
                     if self.dbgraph[st] > 0:
                         print st, self.dbgraph[st]
                         self.dbgraph[st] -= 1
@@ -133,7 +137,7 @@ class de_bruijn_graph(object):
             else:    
                 break
 
-        if curr:
+        if curr is not None:
             stack.append(curr)
         return stack
 
@@ -151,18 +155,24 @@ def de_bruijn_ize(st, k):
 def ssp_de_bruijn(nodes, edges):
     ''' driver function for building de bruijn graph for ssp problem formulation '''
     dbgraph = de_bruijn_graph(nodes, edges)
-    if dbgraph.is_eulirean():
+    if dbgraph.is_eulirean() or True:
         sss = ''
-        e_path = dbgraph.eulirean_walk()
-        for s in e_path:
-            sss = overlapped_string(sss, s)
-        print 'ssp de_bruijn {}'.format(sss)
+        for v in nodes:
+            e_path = dbgraph.eulirean_walk(v)
+            for s in e_path:
+                sss = overlapped_string(sss, s)
+            print 'ssp de_bruijn {}'.format(sss)
         return sss    
     else:
         print 'Graph is not eulirean'
         return None
 
 #s = 'ACTGAGCTA'
-s = 'AABB'
+#nodes, edges = de_bruijn_ize(s, 3)
+#s = 'AABB'
+#nodes, edges = de_bruijn_ize(s, 3)
+#s = 'a_long_long_long_time'
+#nodes, edges = de_bruijn_ize(s, 5)
+s = 'ZABCDABEFABY'
 nodes, edges = de_bruijn_ize(s, 3)
 print ssp_de_bruijn(nodes, edges)
